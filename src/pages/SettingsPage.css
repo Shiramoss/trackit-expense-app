@@ -1,0 +1,62 @@
+/* ניהול קטגוריות */
+.cat-add-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.cat-icon-input {
+  width: 70px;
+  flex-shrink: 0;
+}
+.cat-budget-input {
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+
+.cat-row-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.cat-row-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.cat-budget-edit {
+  width: 120px;
+  flex-shrink: 0;
+  height: 34px;
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  .cat-add-row {
+    flex-direction: column;
+  }
+  .cat-icon-input,
+  .cat-budget-input {
+    width: 100%;
+  }
+  .cat-budget-edit {
+    width: 90px;
+  }
+}

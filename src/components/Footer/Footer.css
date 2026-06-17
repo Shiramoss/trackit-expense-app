@@ -1,0 +1,42 @@
+/* src/components/Footer/Footer.css */
+
+.footer {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+.footer-inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--sp-6) var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  text-align: center;
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.footer-logo-icon { font-size: 18px; }
+.footer-logo-text {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -.3px;
+}
+
+.footer-tagline {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.footer-copy {
+  font-size: 11px;
+  color: var(--border-2);
+}

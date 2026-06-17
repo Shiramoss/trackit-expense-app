@@ -1,0 +1,66 @@
+/* src/pages/BudgetPage.css */
+
+.budget-page { display: flex; flex-direction: column; gap: var(--sp-4); }
+
+.budget-header { margin-bottom: var(--sp-2); }
+
+.budget-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-3);
+}
+
+.budget-card { border-right: 4px solid transparent; }
+.budget-card-good { border-right-color: var(--good); }
+.budget-card-warn { border-right-color: var(--warn); }
+.budget-card-bad  { border-right-color: var(--bad);  }
+
+.budget-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.budget-card-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.budget-icon { font-size: 22px; }
+.budget-cat-name { font-size: 14px; font-weight: 800; color: var(--text); }
+.budget-cat-meta { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+.budget-card-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.budget-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.budget-stat strong { font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text); }
+
+/* No budget */
+.nobud-list { display: flex; flex-direction: column; gap: 1px; }
+.nobud-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.nobud-row:last-child { border-bottom: none; }
+.nobud-icon { font-size: 18px; }
+.nobud-name { flex: 1; font-size: 13px; font-weight: 600; color: var(--text); }
+.nobud-amount { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--muted); }
+
+@media (max-width: 600px) {
+  .budget-grid { grid-template-columns: 1fr; }
+}
