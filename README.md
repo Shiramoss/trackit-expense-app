@@ -1,85 +1,92 @@
 # TrackIt — אפליקציית מעקב הוצאות
 
-פרויקט React לניהול הוצאות חודשיות.  
-בנוי כחלק ממשימת מודול 6 — פיתוח Frontend.
+## סקירה כללית
 
----
+TrackIt היא אפליקציה לניהול הוצאות חודשיות לאנשים וזוגות בישראל.
+
+**הבעיה:** אנשים לא יודעים לאן הכסף הולך בסוף החודש.  
+**הפתרון:** רישום מהיר של הוצאות, סיכום חודשי חכם, מעקב תקציב לפי קטגוריות.
+
+## קהל יעד
+
+צעירים בגיל 20–35 שמנהלים תקציב אישי או זוגי בישראל.
+
+## קישורים
+
+- 🌐 **אתר חי:** https://trackit-expense-app.vercel.app
+- 💻 **קוד:** https://github.com/Shiramoss/trackit-expense-app
+
+## מתחרים ובידול
+
+| מתחרה         | חוזקה                  | מה חסר                            |
+| ------------- | ---------------------- | --------------------------------- |
+| Spendee       | עיצוב נקי, גרפים       | אנגלית בלבד, לא מחובר לבנק ישראלי |
+| Google Sheets | גמיש, מוכר             | ידני לגמרי, לא מותאם לטלפון       |
+| **TrackIt**   | עברית, פשוט, מהיר, RTL | —                                 |
+
+## שירותים חיצוניים
+
+| שירות                | סוג          | למה משמש                       |
+| -------------------- | ------------ | ------------------------------ |
+| Vite                 | כלי בנייה    | הרצת פרויקט React בסביבת פיתוח |
+| React Router DOM     | ספריית ניווט | מעבר בין עמודים ללא טעינה מחדש |
+| Vercel               | פריסה        | אחסון והגשת האפליקציה לאינטרנט |
+| Google Fonts (Inter) | קריאת API    | טעינת פונט מהרשת               |
+| Supabase (עתידי)     | Backend      | אחסון נתונים, אימות משתמשים    |
 
 ## מבנה הפרויקט
 
-```
 trackit/
-├── DESIGN.md               ← מערכת עיצוב מלאה
+├── DESIGN.md ← מערכת עיצוב
+├── ERD.md ← דיאגרמת נתונים
 ├── index.html
 ├── package.json
-├── vite.config.js
 └── src/
-    ├── main.jsx            ← נקודת כניסה
-    ├── App.jsx             ← Routing ראשי
-    ├── styles/
-    │   └── globals.css     ← CSS Variables + עיצוב גלובלי
-    ├── data/
-    │   └── dummyData.js    ← נתוני Placeholder
-    ├── components/
-    │   ├── Navbar/
-    │   │   ├── Navbar.jsx
-    │   │   └── Navbar.css
-    │   ├── Footer/
-    │   │   ├── Footer.jsx
-    │   │   └── Footer.css
-    │   └── Layout/
-    │       └── Layout.jsx
-    └── pages/
-        ├── DashboardPage.jsx   /
-        ├── ExpensesPage.jsx    /expenses
-        ├── IncomePage.jsx      /income
-        ├── BudgetPage.jsx      /budget
-        ├── ReportsPage.jsx     /reports
-        └── SettingsPage.jsx    /settings
-```
-
----
+├── main.jsx
+├── App.jsx ← Routing ראשי
+├── styles/
+│ └── globals.css ← CSS Variables
+├── data/
+│ └── dummyData.js ← נתוני Placeholder
+├── components/
+│ ├── Navbar/
+│ ├── Footer/
+│ └── Layout/
+└── pages/
+├── DashboardPage.jsx /
+├── ExpensesPage.jsx /expenses
+├── IncomePage.jsx /income
+├── BudgetPage.jsx /budget
+├── ReportsPage.jsx /reports
+└── SettingsPage.jsx /settings
 
 ## עמודים ו-URL
 
-| עמוד              | URL        | רמת גישה |
-|-------------------|------------|-----------|
-| דשבורד            | `/`        | מחובר     |
-| הוצאות            | `/expenses`| מחובר     |
-| הכנסות            | `/income`  | מחובר     |
-| תקציב             | `/budget`  | מחובר     |
-| דוחות שנתיים      | `/reports` | מחובר     |
-| הגדרות            | `/settings`| מחובר     |
-
----
+| עמוד   | URL         | תיאור                           |
+| ------ | ----------- | ------------------------------- |
+| דשבורד | `/`         | סיכום חודשי, KPIs, גרף קטגוריות |
+| הוצאות | `/expenses` | רשימה, הוספה, סינון, מחיקה      |
+| הכנסות | `/income`   | מקורות הכנסה, הוספה             |
+| תקציב  | `/budget`   | מעקב יעדים לפי קטגוריה          |
+| דוחות  | `/reports`  | גרף שנתי, השוואה חודשית         |
+| הגדרות | `/settings` | ניהול קטגוריות, העדפות          |
 
 ## הרצת הפרויקט
 
 ```bash
-# התקנת dependencies
 npm install
-
-# הרצה בסביבת פיתוח
 npm run dev
-
-# בנייה לייצור
-npm run build
 ```
-
----
 
 ## טכנולוגיות
 
 - **React 18** + **Vite 5**
-- **React Router DOM v6** — ניווט בין עמודים
+- **React Router DOM v6**
 - **CSS Variables** — מערכת עיצוב מ-`globals.css`
-- עיצוב **RTL עברי**, רספונסיבי לגודל מסך `375px` ומעלה
+- עיצוב **RTL עברי**, רספונסיבי מ-`375px`
 
----
+## Vibe Coding — איך בנינו את זה
 
-## מערכת עיצוב
-
-כל הצבעים, הפונטים והמרווחים מוגדרים ב-`DESIGN.md`  
-ומיושמים דרך CSS Variables ב-`src/styles/globals.css`.
-
-לא קיים ערך hardcoded בקוד — הכל מגיע מהמשתנים.
+האפליקציה נבנתה בעזרת Claude (Anthropic) כ-AI Coding Assistant.  
+תהליך העבודה: תיאור דרישות בעברית ← Claude מייצר קוד ← בדיקה ידנית ← שיפור חוזר.  
+כל קובץ נבדק ידנית והותאם לצרכי הפרויקט.
