@@ -75,17 +75,17 @@ export default function DashboardPage({
     <div className="dashboard">
       {/* Hero KPI strip */}
       <div className="dash-hero">
-        <div className="dash-kpi-card">
+        <div className="dash-kpi-card kpi-expenses">
           <div className="kpi-label">סך הוצאות</div>
           <div className="kpi-value amount-bad">{fmt(totalExpenses)}</div>
           <div className="dash-kpi-sub">{activeMonth}</div>
         </div>
-        <div className="dash-kpi-card">
+        <div className="dash-kpi-card kpi-income">
           <div className="kpi-label">סך הכנסות</div>
           <div className="kpi-value amount-good">{fmt(totalIncome)}</div>
           <div className="dash-kpi-sub">{activeMonth}</div>
         </div>
-        <div className="dash-kpi-card">
+        <div className="dash-kpi-card kpi-balance">
           <div className="kpi-label">יתרה חודשית</div>
           <div
             className={`kpi-value ${balance >= 0 ? "amount-good" : "amount-bad"}`}
@@ -100,7 +100,7 @@ export default function DashboardPage({
             </span>
           </div>
         </div>
-        <div className="dash-kpi-card">
+        <div className="dash-kpi-card kpi-count">
           <div className="kpi-label">מספר הוצאות</div>
           <div className="kpi-value">{expenses.length}</div>
           <div className="dash-kpi-sub">עסקאות</div>

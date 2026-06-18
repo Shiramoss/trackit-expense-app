@@ -381,3 +381,16 @@ select:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+/* Gradient accents */
+.card-accent-purple {
+  border-top: 3px solid var(--c-dashboard);
+}
+.card-accent-orange {
+  border-top: 3px solid var(--c-expenses);
+}
+.card-accent-green {
+  border-top: 3px solid var(--c-income);
+}
+.card-accent-blue {
+  border-top: 3px solid var(--c-reports);
+}
