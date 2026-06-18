@@ -209,3 +209,61 @@
 .dash-kpi-card::before {
   display: none;
 }
+/* Chart card */
+.dash-chart-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dash-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dash-chart-select {
+  width: auto;
+  height: 34px;
+  font-size: 13px;
+  padding: 0 10px;
+}
+
+.dash-chart-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Pie legend */
+.pie-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0 4px;
+}
+
+.pie-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.pie-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pie-legend-name {
+  flex: 1;
+  color: var(--text);
+  font-weight: 600;
+}
+.pie-legend-value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--bad);
+}
