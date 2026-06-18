@@ -13,6 +13,7 @@ export default function IncomePage({
   setAllIncome,
 }) {
   const [showForm, setShowForm] = useState(false);
+  const [formError, setFormError] = useState("");
   const [form, setForm] = useState({ source: "", amount: "", date: "" });
 
   const total = income.reduce((s, i) => s + i.amount, 0);
@@ -20,7 +21,15 @@ export default function IncomePage({
   const balance = total - totalExp;
 
   const handleAdd = () => {
-    if (!form.source || !form.amount) return;
+    setFormError("");
+    if (!form.source.trim()) {
+      setFormError("נא למלא מקור הכנסה");
+      return;
+    }
+    if (!form.amount || isNaN(form.amount) || parseFloat(form.amount) <= 0) {
+      setFormError("נא למלא סכום תקין וחיובי");
+      return;
+    }
 
     const heMonths = [
       "ינואר",
@@ -62,8 +71,10 @@ export default function IncomePage({
     }
 
     setForm({ source: "", amount: "", date: "" });
+    setFormError("");
     setShowForm(false);
   };
+
   const handleDelete = (id) =>
     setIncome((prev) => prev.filter((i) => i.id !== id));
 
@@ -93,7 +104,10 @@ export default function IncomePage({
         </div>
         <button
           className="btn btn-primary"
-          onClick={() => setShowForm((s) => !s)}
+          onClick={() => {
+            setShowForm((s) => !s);
+            setFormError("");
+          }}
         >
           {showForm ? "✕" : "+ הכנסה"}
         </button>
@@ -120,6 +134,7 @@ export default function IncomePage({
                 className="input"
                 type="number"
                 placeholder="0"
+                min="0"
                 value={form.amount}
                 onChange={(e) =>
                   setForm((p) => ({ ...p, amount: e.target.value }))
@@ -138,13 +153,21 @@ export default function IncomePage({
               />
             </div>
           </div>
+          {formError && (
+            <div className="login-error" style={{ marginBottom: 10 }}>
+              {formError}
+            </div>
+          )}
           <div style={{ display: "flex", gap: 8 }}>
             <button className="btn btn-primary" onClick={handleAdd}>
               שמירה
             </button>
             <button
               className="btn btn-secondary"
-              onClick={() => setShowForm(false)}
+              onClick={() => {
+                setShowForm(false);
+                setFormError("");
+              }}
             >
               ביטול
             </button>

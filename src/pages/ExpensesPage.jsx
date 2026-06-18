@@ -17,6 +17,7 @@ export default function ExpensesPage({
   const [catFilter, setCatFilter] = useState("הכל");
   const [typeFilter, setTypeFilter] = useState("הכל");
   const [showForm, setShowForm] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const [form, setForm] = useState({
     merchant: "",
@@ -41,9 +42,20 @@ export default function ExpensesPage({
   const total = filtered.reduce((s, e) => s + e.amount, 0);
 
   const handleAdd = () => {
-    if (!form.merchant || !form.amount) return;
+    setFormError("");
+    if (!form.merchant.trim()) {
+      setFormError("נא למלא שם עסק");
+      return;
+    }
+    if (!form.amount || isNaN(form.amount) || parseFloat(form.amount) <= 0) {
+      setFormError("נא למלא סכום תקין וחיובי");
+      return;
+    }
+    if (!form.category) {
+      setFormError("נא לבחור קטגוריה");
+      return;
+    }
 
-    const today = new Date();
     const heMonths = [
       "ינואר",
       "פברואר",
@@ -59,7 +71,6 @@ export default function ExpensesPage({
       "דצמבר",
     ];
 
-    // קבע את החודש לפי התאריך שהוזן
     let targetMonth = activeMonth;
     if (form.date) {
       const d = new Date(form.date);
@@ -72,16 +83,14 @@ export default function ExpensesPage({
       id: Date.now(),
       ...form,
       amount: parseFloat(form.amount),
-      date: form.date || today.toLocaleDateString("he-IL"),
+      date: form.date || new Date().toLocaleDateString("he-IL"),
     };
 
-    // שמור בחודש הנכון
     setAllExpenses((prev) => ({
       ...prev,
       [targetMonth]: [newExpense, ...(prev[targetMonth] || [])],
     }));
 
-    // עבור לחודש הנכון אוטומטית
     if (targetMonth !== activeMonth) {
       setActiveMonth(targetMonth);
     }
@@ -95,8 +104,10 @@ export default function ExpensesPage({
       payment: "ויזה",
       notes: "",
     });
+    setFormError("");
     setShowForm(false);
   };
+
   const handleDelete = (id) =>
     setExpenses((prev) => prev.filter((e) => e.id !== id));
 
@@ -111,7 +122,10 @@ export default function ExpensesPage({
         </div>
         <button
           className="btn btn-primary"
-          onClick={() => setShowForm((s) => !s)}
+          onClick={() => {
+            setShowForm((s) => !s);
+            setFormError("");
+          }}
         >
           {showForm ? "✕ ביטול" : "+ הוספת הוצאה"}
         </button>
@@ -138,6 +152,7 @@ export default function ExpensesPage({
                 className="input"
                 type="number"
                 placeholder="0"
+                min="0"
                 value={form.amount}
                 onChange={(e) =>
                   setForm((p) => ({ ...p, amount: e.target.value }))
@@ -194,13 +209,21 @@ export default function ExpensesPage({
               />
             </div>
           </div>
+          {formError && (
+            <div className="login-error" style={{ marginBottom: 10 }}>
+              {formError}
+            </div>
+          )}
           <div className="exp-form-actions">
             <button className="btn btn-primary" onClick={handleAdd}>
               שמירה
             </button>
             <button
               className="btn btn-secondary"
-              onClick={() => setShowForm(false)}
+              onClick={() => {
+                setShowForm(false);
+                setFormError("");
+              }}
             >
               ביטול
             </button>
