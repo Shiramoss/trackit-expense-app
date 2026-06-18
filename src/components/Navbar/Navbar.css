@@ -178,3 +178,29 @@
     padding: 6px 11px;
   }
 }
+/* User + logout */
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.topbar-user-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.topbar-logout {
+  font-size: 12px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .topbar-user-name {
+    display: none;
+  }
+}

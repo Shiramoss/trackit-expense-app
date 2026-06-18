@@ -29,6 +29,8 @@ export default function Navbar({
   months,
   expenses,
   income,
+  user,
+  handleLogout,
 }) {
   const location = useLocation();
 
@@ -79,6 +81,19 @@ export default function Navbar({
               {fmt(Math.abs(balance))}
             </span>
           </div>
+        </div>
+
+        {/* משתמש + יציאה */}
+        <div className="topbar-user">
+          <span className="topbar-user-name">
+            👤 {user?.name || user?.email}
+          </span>
+          <button
+            className="btn btn-sm btn-secondary topbar-logout"
+            onClick={handleLogout}
+          >
+            יציאה
+          </button>
         </div>
       </div>
 

@@ -9,6 +9,8 @@ export default function Layout({
   months,
   expenses,
   income,
+  user,
+  handleLogout,
 }) {
   return (
     <div className="app">
@@ -18,6 +20,8 @@ export default function Layout({
         months={months}
         expenses={expenses}
         income={income}
+        user={user}
+        handleLogout={handleLogout}
       />
       <main className="page-content">{children}</main>
       <Footer />
