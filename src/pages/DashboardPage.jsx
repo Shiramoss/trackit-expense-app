@@ -72,7 +72,6 @@ export default function DashboardPage({
   const balance = totalIncome - totalExpenses;
   const isEmpty = expenses.length === 0 && income.length === 0;
 
-  // נתונים לגרף עוגה ועמודות
   const byCategory = categories
     .map((cat, i) => {
       const value = expenses
@@ -81,14 +80,14 @@ export default function DashboardPage({
       return {
         name: cat.name,
         value,
-        icon: cat.icon,
+        icon: cat.icon || "💳",
         fill: COLORS[i % COLORS.length],
       };
     })
     .filter((c) => c.value > 0)
     .sort((a, b) => b.value - a.value);
 
-  // נתונים לציר זמן — לפי יום
+  // ציר זמן — date מ-Supabase הוא "YYYY-MM-DD", מציגים כמו שהוא
   const byDay = expenses
     .reduce((acc, e) => {
       const date = e.date || "";
@@ -132,8 +131,8 @@ export default function DashboardPage({
               <span>הוסיפי הוצאה עם תאריך מחודש אחר — היא תועבר אוטומטית</span>
             </div>
             <div className="dash-tip">
-              <span className="dash-tip-icon">💾</span>
-              <span>הנתונים נשמרים אוטומטית — גם אחרי סגירת הדפדפן</span>
+              <span className="dash-tip-icon">☁️</span>
+              <span>הנתונים נשמרים בענן — זמינים מכל מכשיר</span>
             </div>
             <div className="dash-tip">
               <span className="dash-tip-icon">👤</span>
@@ -202,7 +201,6 @@ export default function DashboardPage({
           <div className="exp-empty">עדיין אין נתונים להצגה</div>
         ) : (
           <>
-            {/* גרף עוגה */}
             {chartType === "pie" && (
               <div className="dash-chart-content">
                 <ResponsiveContainer width="100%" height={240}>
@@ -243,7 +241,6 @@ export default function DashboardPage({
               </div>
             )}
 
-            {/* גרף עמודות */}
             {chartType === "bar" && (
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart
@@ -272,7 +269,6 @@ export default function DashboardPage({
               </ResponsiveContainer>
             )}
 
-            {/* ציר זמן */}
             {chartType === "line" && (
               <ResponsiveContainer width="100%" height={260}>
                 <LineChart

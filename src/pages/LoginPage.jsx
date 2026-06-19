@@ -1,5 +1,6 @@
 // src/pages/LoginPage.jsx
 import { useState } from "react";
+import { supabase } from "../lib/supabase";
 import "./LoginPage.css";
 
 export default function LoginPage({ onLogin }) {
@@ -8,43 +9,77 @@ export default function LoginPage({ onLogin }) {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    setError("");
+
     if (!email || !password) {
       setError("נא למלא אימייל וסיסמה");
       return;
     }
-    if (isRegister && !name) {
+
+    if (isRegister && !name.trim()) {
       setError("נא למלא שם");
       return;
     }
-    if (password.length < 4) {
-      setError("סיסמה חייבת להכיל לפחות 4 תווים");
+
+    if (password.length < 6) {
+      setError("סיסמה חייבת להכיל לפחות 6 תווים");
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem("trackit_users") || "{}");
+    setLoading(true);
 
-    if (isRegister) {
-      if (users[email]) {
-        setError("משתמש כבר קיים עם האימייל הזה");
-        return;
+    try {
+      if (isRegister) {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              name: name.trim(),
+            },
+          },
+        });
+
+        if (error) {
+          setError(error.message);
+          return;
+        }
+
+        const userData = {
+          id: data.user?.id,
+          email: data.user?.email || email,
+          name: data.user?.user_metadata?.name || name,
+        };
+
+        localStorage.setItem("trackit_session", JSON.stringify(userData));
+        onLogin(userData);
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          setError("אימייל או סיסמה שגויים");
+          return;
+        }
+
+        const userData = {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.user_metadata?.name || data.user.email,
+        };
+
+        localStorage.setItem("trackit_session", JSON.stringify(userData));
+        onLogin(userData);
       }
-      users[email] = { name, password };
-      localStorage.setItem("trackit_users", JSON.stringify(users));
-      localStorage.setItem("trackit_session", JSON.stringify({ email, name }));
-      onLogin({ email, name });
-    } else {
-      const user = users[email];
-      if (!user || user.password !== password) {
-        setError("אימייל או סיסמה שגויים");
-        return;
-      }
-      localStorage.setItem(
-        "trackit_session",
-        JSON.stringify({ email, name: user.name }),
-      );
-      onLogin({ email, name: user.name });
+    } catch (err) {
+      setError("משהו השתבש. נסי שוב.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -90,6 +125,7 @@ export default function LoginPage({ onLogin }) {
               />
             </div>
           )}
+
           <div className="field">
             <label className="field-label">אימייל</label>
             <input
@@ -101,12 +137,13 @@ export default function LoginPage({ onLogin }) {
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
             />
           </div>
+
           <div className="field">
             <label className="field-label">סיסמה</label>
             <input
               className="input"
               type="password"
-              placeholder="לפחות 4 תווים"
+              placeholder="לפחות 6 תווים"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
@@ -115,8 +152,12 @@ export default function LoginPage({ onLogin }) {
 
           {error && <div className="login-error">{error}</div>}
 
-          <button className="btn btn-primary login-btn" onClick={handleSubmit}>
-            {isRegister ? "הרשמה" : "התחברות"}
+          <button
+            className="btn btn-primary login-btn"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? "טוען..." : isRegister ? "הרשמה" : "התחברות"}
           </button>
         </div>
       </div>

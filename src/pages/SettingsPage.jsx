@@ -2,44 +2,42 @@
 import { useState } from "react";
 import "./SettingsPage.css";
 
-export default function SettingsPage({ categories, setCategories }) {
+export default function SettingsPage({
+  categories,
+  handleAddCategory,
+  handleUpdateCategory,
+  handleDeleteCategory,
+  user,
+  handleLogout,
+}) {
   const [newName, setNewName] = useState("");
   const [newIcon, setNewIcon] = useState("");
   const [newBudget, setNewBudget] = useState("");
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
-
-  const handleAddCategory = () => {
+  const handleAdd = async () => {
     if (!newName.trim()) return;
-    setCategories((prev) => [
-      ...prev,
-      {
-        name: newName.trim(),
-        icon: newIcon.trim() || "📌",
-        budget: newBudget ? parseInt(newBudget) : null,
-      },
-    ]);
+    setSaving(true);
+    await handleAddCategory({
+      name: newName.trim(),
+      icon: newIcon.trim() || "📌",
+      budget: newBudget ? parseInt(newBudget) : 0,
+    });
+    setSaving(false);
     setNewName("");
     setNewIcon("");
     setNewBudget("");
   };
 
-  const handleDeleteCategory = (name) => {
-    setCategories((prev) => prev.filter((c) => c.name !== name));
+  const handleDelete = async (id) => {
+    await handleDeleteCategory(id);
   };
 
-  const handleBudgetChange = (name, value) => {
-    setCategories((prev) =>
-      prev.map((c) =>
-        c.name === name
-          ? { ...c, budget: value === "" ? null : parseInt(value) }
-          : c,
-      ),
-    );
+  const handleBudgetChange = async (cat, value) => {
+    await handleUpdateCategory(cat.id, {
+      budget: value === "" ? 0 : parseInt(value),
+    });
   };
 
   return (
@@ -47,6 +45,22 @@ export default function SettingsPage({ categories, setCategories }) {
       <div className="settings-header">
         <h1 className="exp-title">הגדרות</h1>
         <p className="exp-subtitle">ניהול חשבון והעדפות</p>
+      </div>
+
+      {/* פרטי חשבון */}
+      <div className="card">
+        <div className="card-title">חשבון</div>
+        <div className="settings-section">
+          <div className="settings-toggle-row">
+            <div>
+              <div className="settings-toggle-label">{user?.name}</div>
+              <div className="settings-toggle-sub">{user?.email}</div>
+            </div>
+            <button className="btn btn-secondary" onClick={handleLogout}>
+              יציאה
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* ניהול קטגוריות */}
@@ -58,7 +72,7 @@ export default function SettingsPage({ categories, setCategories }) {
             placeholder="שם קטגוריה..."
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
+            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
           />
           <input
             className="input cat-icon-input"
@@ -73,26 +87,30 @@ export default function SettingsPage({ categories, setCategories }) {
             value={newBudget}
             onChange={(e) => setNewBudget(e.target.value)}
           />
-          <button className="btn btn-primary" onClick={handleAddCategory}>
-            + הוסף
+          <button
+            className="btn btn-primary"
+            onClick={handleAdd}
+            disabled={saving}
+          >
+            {saving ? "..." : "+ הוסף"}
           </button>
         </div>
 
         <div className="cat-list">
           {categories.map((cat) => (
-            <div key={cat.name} className="cat-row">
-              <span className="cat-row-icon">{cat.icon}</span>
+            <div key={cat.id || cat.name} className="cat-row">
+              <span className="cat-row-icon">{cat.icon || "📌"}</span>
               <span className="cat-row-name">{cat.name}</span>
               <input
                 className="input cat-budget-edit"
                 type="number"
                 placeholder="ללא תקציב"
-                value={cat.budget ?? ""}
-                onChange={(e) => handleBudgetChange(cat.name, e.target.value)}
+                defaultValue={cat.budget || ""}
+                onBlur={(e) => handleBudgetChange(cat, e.target.value)}
               />
               <button
                 className="btn btn-sm btn-danger"
-                onClick={() => handleDeleteCategory(cat.name)}
+                onClick={() => handleDelete(cat.id)}
               >
                 🗑
               </button>
@@ -123,14 +141,8 @@ export default function SettingsPage({ categories, setCategories }) {
           <button className="btn btn-secondary">💾 גיבוי נתונים</button>
         </div>
         <p className="settings-note">
-          ⚠️ הנתונים נשמרים בזיכרון הדפדפן בלבד — רענון הדף יאפס אותם.
+          ✅ הנתונים נשמרים בענן — מסונכרנים בכל מכשיר.
         </p>
-      </div>
-
-      <div className="settings-save">
-        <button className="btn btn-primary" onClick={handleSave}>
-          {saved ? "✓ נשמר!" : "שמירת הגדרות"}
-        </button>
       </div>
     </div>
   );

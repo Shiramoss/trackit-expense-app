@@ -11,6 +11,21 @@ import SettingsPage from "./pages/SettingsPage";
 import LoginPage from "./pages/LoginPage";
 import { CATEGORIES as DEFAULT_CATEGORIES } from "./data/dummyData";
 import "./styles/globals.css";
+import { supabase } from "./lib/supabase";
+import {
+  fetchExpenses,
+  fetchIncome,
+  fetchCategories,
+  addExpense,
+  updateExpense,
+  deleteExpense,
+  addIncome,
+  updateIncome,
+  deleteIncome,
+  addCategory,
+  updateCategory,
+  deleteCategory,
+} from "./lib/db";
 
 const MONTHS = [
   "ינואר 26",
@@ -27,6 +42,18 @@ const MONTHS = [
   "דצמבר 26",
 ];
 
+// מיפוי שם חודש עברי ← מספר חודש (1-12)
+const MONTH_INDEX = Object.fromEntries(MONTHS.map((m, i) => [m, i + 1]));
+
+function monthLabel(dateStr) {
+  // dateStr: "2026-06-15" → "יוני 26"
+  const [year, month] = dateStr.split("-");
+  const shortYear = year.slice(2);
+  return MONTHS[parseInt(month) - 1]
+    ? MONTHS[parseInt(month) - 1].replace(/\d{2}$/, shortYear)
+    : null;
+}
+
 function load(key, fallback) {
   try {
     return JSON.parse(localStorage.getItem(key)) ?? fallback;
@@ -40,47 +67,219 @@ function save(key, value) {
 }
 
 export default function App() {
-  // בדיקת session קיים בטעינה
-  const [user, setUser] = useState(() => load("trackit_session", null));
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(false);
 
-  const [allExpenses, setAllExpensesRaw] = useState(() =>
-    user ? load(`trackit_expenses_${user.email}`, {}) : {},
-  );
-  const [allIncome, setAllIncomeRaw] = useState(() =>
-    user ? load(`trackit_income_${user.email}`, {}) : {},
-  );
-  const [categories, setCategoriesRaw] = useState(() =>
-    user
-      ? load(`trackit_categories_${user.email}`, DEFAULT_CATEGORIES)
-      : DEFAULT_CATEGORIES,
-  );
+  // כל הנתונים — flat arrays מ-Supabase
+  const [allExpensesFlat, setAllExpensesFlat] = useState([]);
+  const [allIncomeFlat, setAllIncomeFlat] = useState([]);
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+
   const [activeMonth, setActiveMonthRaw] = useState(() =>
     load("trackit_month", "יוני 26"),
   );
 
-  // שמירה אוטומטית בכל שינוי — לפי המשתמש המחובר
-  const setAllExpenses = (fn) => {
-    setAllExpensesRaw((prev) => {
-      const next = typeof fn === "function" ? fn(prev) : fn;
-      if (user) save(`trackit_expenses_${user.email}`, next);
-      return next;
+  // ── AUTH ──────────────────────────────────────────
+  useEffect(() => {
+    async function getSupabaseSession() {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.user) {
+        const u = data.session.user;
+        setUser({
+          id: u.id,
+          email: u.email,
+          name: u.user_metadata?.name || u.email,
+        });
+      }
+      setAuthLoading(false);
+    }
+    getSupabaseSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const u = session.user;
+        setUser({
+          id: u.id,
+          email: u.email,
+          name: u.user_metadata?.name || u.email,
+        });
+      } else {
+        setUser(null);
+      }
     });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // ── LOAD DATA כשמשתמש מחובר ──────────────────────
+  useEffect(() => {
+    if (!user) {
+      setAllExpensesFlat([]);
+      setAllIncomeFlat([]);
+      setCategories(DEFAULT_CATEGORIES);
+      return;
+    }
+    async function loadData() {
+      setDataLoading(true);
+      try {
+        const [exp, inc, cats] = await Promise.all([
+          fetchExpenses(),
+          fetchIncome(),
+          fetchCategories(),
+        ]);
+        setAllExpensesFlat(exp);
+        setAllIncomeFlat(inc);
+        setCategories(cats.length > 0 ? cats : DEFAULT_CATEGORIES);
+      } catch (err) {
+        console.error("שגיאה בטעינת נתונים:", err);
+      } finally {
+        setDataLoading(false);
+      }
+    }
+    loadData();
+  }, [user]);
+
+  // ── פילטור לפי חודש פעיל ─────────────────────────
+  const monthNum = MONTH_INDEX[activeMonth]; // 1-12
+  const activeYear = 2026;
+
+  const expenses = allExpensesFlat.filter((e) => {
+    const [year, month] = e.date.split("-").map(Number);
+    return year === activeYear && month === monthNum;
+  });
+
+  const income = allIncomeFlat.filter((e) => {
+    const [year, month] = e.date.split("-").map(Number);
+    return year === activeYear && month === monthNum;
+  });
+
+  // ── allExpenses/allIncome לפי מבנה ישן (לדוחות) ──
+  const allExpenses = allExpensesFlat.reduce((acc, e) => {
+    const label = monthLabel(e.date);
+    if (!label) return acc;
+    acc[label] = [...(acc[label] || []), e];
+    return acc;
+  }, {});
+
+  const allIncome = allIncomeFlat.reduce((acc, e) => {
+    const label = monthLabel(e.date);
+    if (!label) return acc;
+    acc[label] = [...(acc[label] || []), e];
+    return acc;
+  }, {});
+
+  // ── SETTERS — שומרים ל-Supabase ועדכון state ──────
+
+  const setExpenses = async (fn) => {
+    // fn יכול להיות פונקציה או מערך — מטפלים בשני המקרים
+    // אבל בפרקטיקה — נשתמש בפונקציות ספציפיות למטה
+    console.warn("השתמשי ב-handleAddExpense / handleDeleteExpense");
   };
 
-  const setAllIncome = (fn) => {
-    setAllIncomeRaw((prev) => {
-      const next = typeof fn === "function" ? fn(prev) : fn;
-      if (user) save(`trackit_income_${user.email}`, next);
-      return next;
-    });
+  const setIncome = async (fn) => {
+    console.warn("השתמשי ב-handleAddIncome / handleDeleteIncome");
   };
 
-  const setCategories = (fn) => {
-    setCategoriesRaw((prev) => {
-      const next = typeof fn === "function" ? fn(prev) : fn;
-      if (user) save(`trackit_categories_${user.email}`, next);
-      return next;
-    });
+  // ── EXPENSE HANDLERS ──────────────────────────────
+  const handleAddExpense = async (expense) => {
+    try {
+      const saved = await addExpense(expense);
+      setAllExpensesFlat((prev) => [saved, ...prev]);
+    } catch (err) {
+      console.error("שגיאה בהוספת הוצאה:", err);
+    }
+  };
+
+  const handleUpdateExpense = async (id, updates) => {
+    try {
+      const updated = await updateExpense(id, updates);
+      setAllExpensesFlat((prev) =>
+        prev.map((e) => (e.id === id ? updated : e)),
+      );
+    } catch (err) {
+      console.error("שגיאה בעדכון הוצאה:", err);
+    }
+  };
+
+  const handleDeleteExpense = async (id) => {
+    try {
+      await deleteExpense(id);
+      setAllExpensesFlat((prev) => prev.filter((e) => e.id !== id));
+    } catch (err) {
+      console.error("שגיאה במחיקת הוצאה:", err);
+    }
+  };
+
+  // ── INCOME HANDLERS ───────────────────────────────
+  const handleAddIncome = async (item) => {
+    try {
+      const saved = await addIncome(item);
+      setAllIncomeFlat((prev) => [saved, ...prev]);
+    } catch (err) {
+      console.error("שגיאה בהוספת הכנסה:", err);
+    }
+  };
+
+  const handleUpdateIncome = async (id, updates) => {
+    try {
+      const updated = await updateIncome(id, updates);
+      setAllIncomeFlat((prev) => prev.map((e) => (e.id === id ? updated : e)));
+    } catch (err) {
+      console.error("שגיאה בעדכון הכנסה:", err);
+    }
+  };
+
+  const handleDeleteIncome = async (id) => {
+    try {
+      await deleteIncome(id);
+      setAllIncomeFlat((prev) => prev.filter((e) => e.id !== id));
+    } catch (err) {
+      console.error("שגיאה במחיקת הכנסה:", err);
+    }
+  };
+
+  // ── CATEGORY HANDLERS ─────────────────────────────
+  const handleAddCategory = async (category) => {
+    try {
+      const saved = await addCategory(category);
+      setCategories((prev) => [...prev, saved]);
+    } catch (err) {
+      console.error("שגיאה בהוספת קטגוריה:", err);
+    }
+  };
+
+  const handleUpdateCategory = async (id, updates) => {
+    try {
+      const updated = await updateCategory(id, updates);
+      setCategories((prev) => prev.map((c) => (c.id === id ? updated : c)));
+    } catch (err) {
+      console.error("שגיאה בעדכון קטגוריה:", err);
+    }
+  };
+
+  const handleDeleteCategory = async (id) => {
+    try {
+      await deleteCategory(id);
+      setCategories((prev) => prev.filter((c) => c.id !== id));
+    } catch (err) {
+      console.error("שגיאה במחיקת קטגוריה:", err);
+    }
+  };
+
+  // ── AUTH HANDLERS ─────────────────────────────────
+  const handleLogin = (userData) => {
+    setUser(userData);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem("trackit_session");
+    setUser(null);
+    setAllExpensesFlat([]);
+    setAllIncomeFlat([]);
+    setCategories(DEFAULT_CATEGORIES);
   };
 
   const setActiveMonth = (month) => {
@@ -88,43 +287,7 @@ export default function App() {
     save("trackit_month", month);
   };
 
-  // כניסה — טוען נתונים של המשתמש הספציפי
-  const handleLogin = (userData) => {
-    setUser(userData);
-    save("trackit_session", userData);
-    setAllExpensesRaw(load(`trackit_expenses_${userData.email}`, {}));
-    setAllIncomeRaw(load(`trackit_income_${userData.email}`, {}));
-    setCategoriesRaw(
-      load(`trackit_categories_${userData.email}`, DEFAULT_CATEGORIES),
-    );
-  };
-
-  // יציאה
-  const handleLogout = () => {
-    localStorage.removeItem("trackit_session");
-    setUser(null);
-    setAllExpensesRaw({});
-    setAllIncomeRaw({});
-    setCategoriesRaw(DEFAULT_CATEGORIES);
-  };
-
-  const expenses = allExpenses[activeMonth] || [];
-  const income = allIncome[activeMonth] || [];
-
-  const setExpenses = (fn) =>
-    setAllExpenses((prev) => ({
-      ...prev,
-      [activeMonth]:
-        typeof fn === "function" ? fn(prev[activeMonth] || []) : fn,
-    }));
-
-  const setIncome = (fn) =>
-    setAllIncome((prev) => ({
-      ...prev,
-      [activeMonth]:
-        typeof fn === "function" ? fn(prev[activeMonth] || []) : fn,
-    }));
-
+  // ── SHARED PROPS ──────────────────────────────────
   const sharedProps = {
     expenses,
     setExpenses,
@@ -134,13 +297,41 @@ export default function App() {
     setCategories,
     activeMonth,
     setActiveMonth,
-    setAllExpenses,
-    setAllIncome,
+    allExpenses,
+    allIncome,
+    setAllExpenses: () => {},
+    setAllIncome: () => {},
     user,
     handleLogout,
+    // handlers חדשים
+    handleAddExpense,
+    handleUpdateExpense,
+    handleDeleteExpense,
+    handleAddIncome,
+    handleUpdateIncome,
+    handleDeleteIncome,
+    handleAddCategory,
+    handleUpdateCategory,
+    handleDeleteCategory,
   };
 
-  // אם לא מחובר — הצג Login
+  // ── RENDER ────────────────────────────────────────
+  if (authLoading || dataLoading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          fontSize: "1.2rem",
+        }}
+      >
+        טוען...
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <BrowserRouter>

@@ -6,21 +6,22 @@ const fmt = (n) => `₪${n.toLocaleString("he-IL")}`;
 
 export default function IncomePage({
   income,
-  setIncome,
   expenses,
   activeMonth,
   setActiveMonth,
-  setAllIncome,
+  handleAddIncome,
+  handleDeleteIncome,
 }) {
   const [showForm, setShowForm] = useState(false);
   const [formError, setFormError] = useState("");
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ source: "", amount: "", date: "" });
 
   const total = income.reduce((s, i) => s + i.amount, 0);
   const totalExp = expenses.reduce((s, e) => s + e.amount, 0);
   const balance = total - totalExp;
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     setFormError("");
     if (!form.source.trim()) {
       setFormError("נא למלא מקור הכנסה");
@@ -30,6 +31,8 @@ export default function IncomePage({
       setFormError("נא למלא סכום תקין וחיובי");
       return;
     }
+
+    const dateStr = form.date || new Date().toISOString().split("T")[0];
 
     const heMonths = [
       "ינואר",
@@ -45,38 +48,28 @@ export default function IncomePage({
       "נובמבר",
       "דצמבר",
     ];
-
-    let targetMonth = activeMonth;
-    if (form.date) {
-      const d = new Date(form.date);
-      const monthName = heMonths[d.getMonth()];
-      const year = String(d.getFullYear()).slice(2);
-      targetMonth = `${monthName} ${year}`;
-    }
-
-    const newIncome = {
-      id: Date.now(),
-      ...form,
-      amount: parseFloat(form.amount),
-      date: form.date || new Date().toLocaleDateString("he-IL"),
-    };
-
-    setAllIncome((prev) => ({
-      ...prev,
-      [targetMonth]: [newIncome, ...(prev[targetMonth] || [])],
-    }));
-
+    const d = new Date(dateStr);
+    const targetMonth = `${heMonths[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
     if (targetMonth !== activeMonth) {
       setActiveMonth(targetMonth);
     }
+
+    setSaving(true);
+    await handleAddIncome({
+      source: form.source.trim(),
+      amount: parseFloat(form.amount),
+      date: dateStr,
+    });
+    setSaving(false);
 
     setForm({ source: "", amount: "", date: "" });
     setFormError("");
     setShowForm(false);
   };
 
-  const handleDelete = (id) =>
-    setIncome((prev) => prev.filter((i) => i.id !== id));
+  const handleDelete = async (id) => {
+    await handleDeleteIncome(id);
+  };
 
   return (
     <div className="income-page">
@@ -159,8 +152,12 @@ export default function IncomePage({
             </div>
           )}
           <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn btn-primary" onClick={handleAdd}>
-              שמירה
+            <button
+              className="btn btn-primary"
+              onClick={handleAdd}
+              disabled={saving}
+            >
+              {saving ? "שומר..." : "שמירה"}
             </button>
             <button
               className="btn btn-secondary"

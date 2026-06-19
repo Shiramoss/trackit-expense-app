@@ -4,7 +4,9 @@ import "./BudgetPage.css";
 const fmt = (n) => `₪${n.toLocaleString("he-IL")}`;
 
 export default function BudgetPage({ expenses, categories }) {
-  const withBudget = categories.filter((c) => c.budget != null);
+  // קטגוריות עם תקציב מוגדר וחיובי (מגן מפני 0 ו-null)
+  const withBudget = categories.filter((c) => c.budget != null && c.budget > 0);
+  const withoutBudget = categories.filter((c) => !c.budget || c.budget === 0);
 
   const rows = withBudget.map((cat) => {
     const spent = expenses
@@ -33,12 +35,12 @@ export default function BudgetPage({ expenses, categories }) {
         <div className="budget-grid">
           {rows.map((row) => (
             <div
-              key={row.name}
+              key={row.id || row.name}
               className={`card budget-card budget-card-${row.cls}`}
             >
               <div className="budget-card-top">
                 <div className="budget-card-left">
-                  <span className="budget-icon">{row.icon}</span>
+                  <span className="budget-icon">{row.icon || "💳"}</span>
                   <div>
                     <div className="budget-cat-name">{row.name}</div>
                     <div className="budget-cat-meta">
@@ -81,26 +83,24 @@ export default function BudgetPage({ expenses, categories }) {
 
       <div className="card">
         <div className="card-title">קטגוריות ללא תקציב מוגדר</div>
-        {categories.filter((c) => c.budget == null).length === 0 ? (
+        {withoutBudget.length === 0 ? (
           <div className="exp-empty">כל הקטגוריות עם תקציב מוגדר</div>
         ) : (
           <div className="nobud-list">
-            {categories
-              .filter((c) => c.budget == null)
-              .map((cat) => {
-                const spent = expenses
-                  .filter((e) => e.category === cat.name)
-                  .reduce((s, e) => s + e.amount, 0);
-                return (
-                  <div key={cat.name} className="nobud-row">
-                    <span className="nobud-icon">{cat.icon}</span>
-                    <span className="nobud-name">{cat.name}</span>
-                    <span className="nobud-amount">
-                      {spent > 0 ? fmt(spent) : "—"}
-                    </span>
-                  </div>
-                );
-              })}
+            {withoutBudget.map((cat) => {
+              const spent = expenses
+                .filter((e) => e.category === cat.name)
+                .reduce((s, e) => s + e.amount, 0);
+              return (
+                <div key={cat.id || cat.name} className="nobud-row">
+                  <span className="nobud-icon">{cat.icon || "💳"}</span>
+                  <span className="nobud-name">{cat.name}</span>
+                  <span className="nobud-amount">
+                    {spent > 0 ? fmt(spent) : "—"}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

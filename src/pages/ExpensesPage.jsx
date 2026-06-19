@@ -7,17 +7,18 @@ const fmt = (n) =>
 
 export default function ExpensesPage({
   expenses,
-  setExpenses,
   categories,
   activeMonth,
   setActiveMonth,
-  setAllExpenses,
+  handleAddExpense,
+  handleDeleteExpense,
 }) {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("הכל");
   const [typeFilter, setTypeFilter] = useState("הכל");
   const [showForm, setShowForm] = useState(false);
   const [formError, setFormError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({
     merchant: "",
@@ -33,7 +34,7 @@ export default function ExpensesPage({
 
   const filtered = expenses.filter((e) => {
     const matchSearch =
-      !search || e.merchant.includes(search) || e.category.includes(search);
+      !search || e.merchant?.includes(search) || e.category?.includes(search);
     const matchCat = catFilter === "הכל" || e.category === catFilter;
     const matchType = typeFilter === "הכל" || e.type === typeFilter;
     return matchSearch && matchCat && matchType;
@@ -41,8 +42,9 @@ export default function ExpensesPage({
 
   const total = filtered.reduce((s, e) => s + e.amount, 0);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     setFormError("");
+
     if (!form.merchant.trim()) {
       setFormError("נא למלא שם עסק");
       return;
@@ -56,6 +58,10 @@ export default function ExpensesPage({
       return;
     }
 
+    // תאריך — אם לא נבחר, היום
+    const dateStr = form.date || new Date().toISOString().split("T")[0];
+
+    // עדכון החודש הפעיל לפי התאריך שנבחר
     const heMonths = [
       "ינואר",
       "פברואר",
@@ -70,30 +76,23 @@ export default function ExpensesPage({
       "נובמבר",
       "דצמבר",
     ];
-
-    let targetMonth = activeMonth;
-    if (form.date) {
-      const d = new Date(form.date);
-      const monthName = heMonths[d.getMonth()];
-      const year = String(d.getFullYear()).slice(2);
-      targetMonth = `${monthName} ${year}`;
-    }
-
-    const newExpense = {
-      id: Date.now(),
-      ...form,
-      amount: parseFloat(form.amount),
-      date: form.date || new Date().toLocaleDateString("he-IL"),
-    };
-
-    setAllExpenses((prev) => ({
-      ...prev,
-      [targetMonth]: [newExpense, ...(prev[targetMonth] || [])],
-    }));
-
+    const d = new Date(dateStr);
+    const targetMonth = `${heMonths[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
     if (targetMonth !== activeMonth) {
       setActiveMonth(targetMonth);
     }
+
+    setSaving(true);
+    await handleAddExpense({
+      merchant: form.merchant.trim(),
+      amount: parseFloat(form.amount),
+      category: form.category,
+      date: dateStr,
+      type: form.type,
+      payment: form.payment,
+      notes: form.notes,
+    });
+    setSaving(false);
 
     setForm({
       merchant: "",
@@ -108,8 +107,9 @@ export default function ExpensesPage({
     setShowForm(false);
   };
 
-  const handleDelete = (id) =>
-    setExpenses((prev) => prev.filter((e) => e.id !== id));
+  const handleDelete = async (id) => {
+    await handleDeleteExpense(id);
+  };
 
   return (
     <div className="expenses-page">
@@ -215,8 +215,12 @@ export default function ExpensesPage({
             </div>
           )}
           <div className="exp-form-actions">
-            <button className="btn btn-primary" onClick={handleAdd}>
-              שמירה
+            <button
+              className="btn btn-primary"
+              onClick={handleAdd}
+              disabled={saving}
+            >
+              {saving ? "שומר..." : "שמירה"}
             </button>
             <button
               className="btn btn-secondary"
