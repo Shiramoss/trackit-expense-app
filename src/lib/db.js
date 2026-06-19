@@ -11,12 +11,12 @@ export async function fetchExpenses() {
 }
 
 export async function addExpense(expense) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData?.session?.user?.id;
+  if (!userId) throw new Error("לא מחובר");
   const { data, error } = await supabase
     .from("expenses")
-    .insert({ ...expense, user_id: user.id })
+    .insert({ ...expense, user_id: userId })
     .select()
     .single();
   if (error) throw error;
@@ -50,12 +50,12 @@ export async function fetchIncome() {
 }
 
 export async function addIncome(item) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData?.session?.user?.id;
+  if (!userId) throw new Error("לא מחובר");
   const { data, error } = await supabase
     .from("income")
-    .insert({ ...item, user_id: user.id })
+    .insert({ ...item, user_id: userId })
     .select()
     .single();
   if (error) throw error;
@@ -89,12 +89,12 @@ export async function fetchCategories() {
 }
 
 export async function addCategory(category) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData?.session?.user?.id;
+  if (!userId) throw new Error("לא מחובר");
   const { data, error } = await supabase
     .from("categories")
-    .insert({ ...category, user_id: user.id })
+    .insert({ ...category, user_id: userId })
     .select()
     .single();
   if (error) throw error;

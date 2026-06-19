@@ -1,4 +1,3 @@
-// src/App.jsx
 import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout/Layout";
@@ -42,16 +41,15 @@ const MONTHS = [
   "דצמבר 26",
 ];
 
-// מיפוי שם חודש עברי ← מספר חודש (1-12)
 const MONTH_INDEX = Object.fromEntries(MONTHS.map((m, i) => [m, i + 1]));
 
 function monthLabel(dateStr) {
-  // dateStr: "2026-06-15" → "יוני 26"
+  if (!dateStr) return null;
   const [year, month] = dateStr.split("-");
   const shortYear = year.slice(2);
-  return MONTHS[parseInt(month) - 1]
-    ? MONTHS[parseInt(month) - 1].replace(/\d{2}$/, shortYear)
-    : null;
+  const base = MONTHS[parseInt(month) - 1];
+  if (!base) return null;
+  return base.replace(/\d{2}$/, shortYear);
 }
 
 function load(key, fallback) {
@@ -71,7 +69,6 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(false);
 
-  // כל הנתונים — flat arrays מ-Supabase
   const [allExpensesFlat, setAllExpensesFlat] = useState([]);
   const [allIncomeFlat, setAllIncomeFlat] = useState([]);
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
@@ -82,7 +79,6 @@ export default function App() {
 
   // ── AUTH ──────────────────────────────────────────
   useEffect(() => {
-    // קודם בודקים session קיים
     supabase.auth.getSession().then(({ data }) => {
       if (data.session?.user) {
         const u = data.session.user;
@@ -95,7 +91,6 @@ export default function App() {
       setAuthLoading(false);
     });
 
-    // אחר כך מאזינים לשינויים
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -103,20 +98,26 @@ export default function App() {
         setUser(null);
         return;
       }
-      if (session?.user) {
-        const u = session.user;
-        setUser({
-          id: u.id,
-          email: u.email,
-          name: u.user_metadata?.name || u.email,
-        });
+      if (
+        event === "SIGNED_IN" ||
+        event === "TOKEN_REFRESHED" ||
+        event === "INITIAL_SESSION"
+      ) {
+        if (session?.user) {
+          const u = session.user;
+          setUser({
+            id: u.id,
+            email: u.email,
+            name: u.user_metadata?.name || u.email,
+          });
+        }
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // ── LOAD DATA כשמשתמש מחובר ──────────────────────
+  // ── LOAD DATA ─────────────────────────────────────
   useEffect(() => {
     if (!user) {
       setAllExpensesFlat([]);
@@ -145,20 +146,21 @@ export default function App() {
   }, [user]);
 
   // ── פילטור לפי חודש פעיל ─────────────────────────
-  const monthNum = MONTH_INDEX[activeMonth]; // 1-12
+  const monthNum = MONTH_INDEX[activeMonth];
   const activeYear = 2026;
 
   const expenses = allExpensesFlat.filter((e) => {
+    if (!e.date) return false;
     const [year, month] = e.date.split("-").map(Number);
     return year === activeYear && month === monthNum;
   });
 
   const income = allIncomeFlat.filter((e) => {
+    if (!e.date) return false;
     const [year, month] = e.date.split("-").map(Number);
     return year === activeYear && month === monthNum;
   });
 
-  // ── allExpenses/allIncome לפי מבנה ישן (לדוחות) ──
   const allExpenses = allExpensesFlat.reduce((acc, e) => {
     const label = monthLabel(e.date);
     if (!label) return acc;
@@ -172,18 +174,6 @@ export default function App() {
     acc[label] = [...(acc[label] || []), e];
     return acc;
   }, {});
-
-  // ── SETTERS — שומרים ל-Supabase ועדכון state ──────
-
-  const setExpenses = async (fn) => {
-    // fn יכול להיות פונקציה או מערך — מטפלים בשני המקרים
-    // אבל בפרקטיקה — נשתמש בפונקציות ספציפיות למטה
-    console.warn("השתמשי ב-handleAddExpense / handleDeleteExpense");
-  };
-
-  const setIncome = async (fn) => {
-    console.warn("השתמשי ב-handleAddIncome / handleDeleteIncome");
-  };
 
   // ── EXPENSE HANDLERS ──────────────────────────────
   const handleAddExpense = async (expense) => {
@@ -293,11 +283,11 @@ export default function App() {
   // ── SHARED PROPS ──────────────────────────────────
   const sharedProps = {
     expenses,
-    setExpenses,
+    setExpenses: () => {},
     income,
-    setIncome,
+    setIncome: () => {},
     categories,
-    setCategories,
+    setCategories: () => {},
     activeMonth,
     setActiveMonth,
     allExpenses,
@@ -306,7 +296,6 @@ export default function App() {
     setAllIncome: () => {},
     user,
     handleLogout,
-    // handlers חדשים
     handleAddExpense,
     handleUpdateExpense,
     handleDeleteExpense,
