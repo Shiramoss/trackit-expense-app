@@ -82,8 +82,8 @@ export default function App() {
 
   // ── AUTH ──────────────────────────────────────────
   useEffect(() => {
-    async function getSupabaseSession() {
-      const { data } = await supabase.auth.getSession();
+    // קודם בודקים session קיים
+    supabase.auth.getSession().then(({ data }) => {
       if (data.session?.user) {
         const u = data.session.user;
         setUser({
@@ -93,12 +93,16 @@ export default function App() {
         });
       }
       setAuthLoading(false);
-    }
-    getSupabaseSession();
+    });
 
+    // אחר כך מאזינים לשינויים
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        setUser(null);
+        return;
+      }
       if (session?.user) {
         const u = session.user;
         setUser({
@@ -106,10 +110,9 @@ export default function App() {
           email: u.email,
           name: u.user_metadata?.name || u.email,
         });
-      } else {
-        setUser(null);
       }
     });
+
     return () => subscription.unsubscribe();
   }, []);
 
