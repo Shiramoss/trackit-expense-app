@@ -17,6 +17,24 @@ function exportToCSV(expenses) {
   URL.revokeObjectURL(url);
 }
 
+function exportBackup(expenses, income, categories) {
+  const data = {
+    expenses,
+    income,
+    categories,
+    exportedAt: new Date().toISOString(),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "trackit-backup.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function SettingsPage({
   categories,
   handleAddCategory,
@@ -25,6 +43,9 @@ export default function SettingsPage({
   user,
   handleLogout,
   allExpensesFlat,
+  income,
+  darkMode,
+  setDarkMode,
 }) {
   const [newName, setNewName] = useState("");
   const [newIcon, setNewIcon] = useState("");
@@ -142,9 +163,16 @@ export default function SettingsPage({
           <div className="settings-toggle-row">
             <div>
               <div className="settings-toggle-label">מצב כהה</div>
-              <div className="settings-toggle-sub">בקרוב</div>
+              <div className="settings-toggle-sub">
+                {darkMode ? "פעיל" : "כבוי"}
+              </div>
             </div>
-            <div className="settings-toggle-pill disabled">OFF</div>
+            <button
+              className={`settings-toggle-pill ${darkMode ? "on" : ""}`}
+              onClick={() => setDarkMode((d) => !d)}
+            >
+              {darkMode ? "ON" : "OFF"}
+            </button>
           </div>
         </div>
       </div>
@@ -154,7 +182,12 @@ export default function SettingsPage({
         <div className="card-title">ניהול נתונים</div>
         <div className="settings-actions">
           <button className="btn btn-secondary" onClick={() => exportToCSV(allExpensesFlat || [])}>📥 ייצוא לאקסל</button>
-          <button className="btn btn-secondary">💾 גיבוי נתונים</button>
+          <button
+            className="btn btn-secondary"
+            onClick={() => exportBackup(allExpensesFlat || [], income || [], categories)}
+          >
+            💾 גיבוי נתונים
+          </button>
         </div>
         <p className="settings-note">
           ✅ הנתונים נשמרים בענן — מסונכרנים בכל מכשיר.

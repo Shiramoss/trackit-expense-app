@@ -68,6 +68,14 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(false);
+  const [darkMode, setDarkMode] = useState(
+    () => localStorage.getItem("trackit_dark") === "true"
+  );
+
+  useEffect(() => {
+    document.body.classList.toggle("dark", darkMode);
+    localStorage.setItem("trackit_dark", darkMode);
+  }, [darkMode]);
 
   const [allExpensesFlat, setAllExpensesFlat] = useState([]);
   const [allIncomeFlat, setAllIncomeFlat] = useState([]);
@@ -306,6 +314,8 @@ export default function App() {
     handleAddCategory,
     handleUpdateCategory,
     handleDeleteCategory,
+    darkMode,
+    setDarkMode,
   };
 
   // ── RENDER ────────────────────────────────────────

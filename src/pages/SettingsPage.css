@@ -1,3 +1,62 @@
+/* Settings layout */
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+.settings-header { margin-bottom: 4px; }
+.settings-section { display: flex; flex-direction: column; gap: 10px; }
+
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+.settings-toggle-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.settings-toggle-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.settings-toggle-pill {
+  min-width: 52px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  background: var(--border);
+  color: var(--muted);
+  transition: background 0.2s, color 0.2s;
+}
+.settings-toggle-pill.on {
+  background: var(--accent);
+  color: #fff;
+}
+.settings-toggle-pill.disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.settings-note {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
 /* ניהול קטגוריות */
 .cat-add-row {
   display: flex;
