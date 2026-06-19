@@ -1,5 +1,5 @@
 // src/pages/DashboardPage.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   PieChart,
@@ -65,6 +65,14 @@ export default function DashboardPage({
 }) {
   const navigate = useNavigate();
   const [chartType, setChartType] = useState("pie");
+  const [rates, setRates] = useState(null);
+
+  useEffect(() => {
+    fetch("https://api.frankfurter.app/latest?from=ILS&to=USD,EUR")
+      .then((r) => r.json())
+      .then((data) => setRates(data.rates))
+      .catch(() => {});
+  }, []);
 
   const recent = expenses.slice(0, 5);
   const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
@@ -179,6 +187,35 @@ export default function DashboardPage({
           <div className="dash-kpi-sub">עסקאות</div>
         </div>
       </div>
+
+      {/* המרת מטבע — frankfurter.app */}
+      {rates && totalExpenses > 0 && (
+        <div className="card dash-currency-card">
+          <div className="card-title">💱 שווי ההוצאות במטבע חוץ</div>
+          <div className="dash-currency-row">
+            <div className="dash-currency-item">
+              <span className="currency-flag">🇺🇸</span>
+              <span className="currency-label">דולר אמריקאי</span>
+              <span className="currency-value">
+                ${(totalExpenses * rates.USD).toLocaleString("en-US", { maximumFractionDigits: 0 })}
+              </span>
+            </div>
+            <div className="dash-currency-item">
+              <span className="currency-flag">🇪🇺</span>
+              <span className="currency-label">אירו</span>
+              <span className="currency-value">
+                €{(totalExpenses * rates.EUR).toLocaleString("en-EU", { maximumFractionDigits: 0 })}
+              </span>
+            </div>
+            <div className="dash-currency-item">
+              <span className="currency-flag">🇮🇱</span>
+              <span className="currency-label">שקל</span>
+              <span className="currency-value">{fmt(totalExpenses)}</span>
+            </div>
+          </div>
+          <div className="currency-source">שערים: frankfurter.app · מתעדכן יומית</div>
+        </div>
+      )}
 
       {/* גרף אינטראקטיבי */}
       <div className="card dash-chart-card">

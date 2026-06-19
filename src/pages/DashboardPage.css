@@ -267,3 +267,44 @@
   font-variant-numeric: tabular-nums;
   color: var(--bad);
 }
+
+/* Currency widget */
+.dash-currency-card {
+  padding: 16px 20px;
+}
+.dash-currency-row {
+  display: flex;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+  margin: 12px 0 8px;
+}
+.dash-currency-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 10px 16px;
+  flex: 1;
+  min-width: 140px;
+}
+.currency-flag { font-size: 20px; }
+.currency-label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.currency-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.currency-source {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: left;
+  direction: ltr;
+}

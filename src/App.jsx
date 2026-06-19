@@ -284,6 +284,7 @@ export default function App() {
   const sharedProps = {
     expenses,
     setExpenses: () => {},
+    allExpensesFlat,
     income,
     setIncome: () => {},
     categories,

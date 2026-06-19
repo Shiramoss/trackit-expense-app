@@ -2,6 +2,21 @@
 import { useState } from "react";
 import "./SettingsPage.css";
 
+function exportToCSV(expenses) {
+  const header = "תאריך,עסק,קטגוריה,סוג,תשלום,סכום,הערות";
+  const rows = expenses.map((e) =>
+    [e.date, e.merchant, e.category, e.type, e.payment, e.amount, e.notes || ""].join(",")
+  );
+  const csv = "﻿" + [header, ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "trackit-expenses.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function SettingsPage({
   categories,
   handleAddCategory,
@@ -9,6 +24,7 @@ export default function SettingsPage({
   handleDeleteCategory,
   user,
   handleLogout,
+  allExpensesFlat,
 }) {
   const [newName, setNewName] = useState("");
   const [newIcon, setNewIcon] = useState("");
@@ -137,7 +153,7 @@ export default function SettingsPage({
       <div className="card">
         <div className="card-title">ניהול נתונים</div>
         <div className="settings-actions">
-          <button className="btn btn-secondary">📥 ייצוא לאקסל</button>
+          <button className="btn btn-secondary" onClick={() => exportToCSV(allExpensesFlat || [])}>📥 ייצוא לאקסל</button>
           <button className="btn btn-secondary">💾 גיבוי נתונים</button>
         </div>
         <p className="settings-note">
